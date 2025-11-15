@@ -16,12 +16,18 @@ export default function Pricing() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="px-5 py-2 text-gray-700 hover:text-gray-900 transition-colors font-dm-serif">
+          <Link
+            href="/auth/signin"
+            className="px-5 py-2 text-gray-700 hover:text-gray-900 transition-colors font-dm-serif"
+          >
             Log In
-          </button>
-          <button className="px-6 py-2.5 bg-emerald-400 hover:bg-emerald-500 text-gray-900 rounded-full font-dm-serif font-medium transition-all shadow-sm hover:shadow-md">
+          </Link>
+          <Link
+            href="/auth/signup"
+            className="px-6 py-2.5 bg-emerald-400 hover:bg-emerald-500 text-gray-900 rounded-full font-dm-serif font-medium transition-all shadow-sm hover:shadow-md"
+          >
             Get Started
-          </button>
+          </Link>
         </div>
       </nav>
       <div className="max-w-7xl mx-auto px-6">
