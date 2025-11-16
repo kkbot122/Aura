@@ -57,15 +57,19 @@ import {
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // VIEW STATE
   // 'home', 'history', 'archive', 'settings', 'profile'
-  const [currentView, setCurrentView] = useState("home"); 
-  
+  const [currentView, setCurrentView] = useState("home");
+
   const [showGenerator, setShowGenerator] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [style, setStyle] = useState("");
   const [industry, setIndustry] = useState("");
+
+  // NEW: State to track if the current logo has been saved to avoid duplicates
+  const [savedLogoUrl, setSavedLogoUrl] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const supabase = createClient();
   const router = useRouter();
@@ -79,6 +83,7 @@ export default function Dashboard() {
     reset,
   } = useLogoGeneration();
 
+  // --- AUTH CHECK ---
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -122,6 +127,109 @@ export default function Dashboard() {
     return () => subscription.unsubscribe();
   }, [router, supabase.auth]);
 
+  // --- AUTO-SAVE LOGIC ---
+  // --- AUTO-SAVE LOGIC ---
+  useEffect(() => {
+    const saveToHistory = async () => {
+      // Add detailed logging to debug
+      console.log("🔄 Auto-save conditions check:", {
+        hasLogoPng: !!logoPng,
+        logoPngType: typeof logoPng,
+        logoPngLength: logoPng?.length,
+        logoPngPreview: logoPng?.substring(0, 50), // First 50 chars
+        hasUser: !!user,
+        userId: user?.id,
+        alreadySaved: logoPng === savedLogoUrl,
+        hasBrand: !!brand,
+        status: status,
+      });
+
+      // Enhanced conditions: Only save when generation is complete and we have all data
+      if (
+        logoPng &&
+        user &&
+        status === "complete" &&
+        logoPng !== savedLogoUrl &&
+        brand
+      ) {
+        console.log(
+          "✅ All conditions met, attempting to save logo to history..."
+        );
+
+        try {
+          const logoData = {
+            user_id: user.id,
+            business_name: brand.business_name || businessName || "Untitled",
+            style: style || brand.design_style || "General",
+            industry: industry || "General",
+            logo_url: logoPng,
+            status: "completed",
+            archived: false,
+            created_at: new Date().toISOString(),
+          };
+
+          console.log("📦 Preparing to save logo data:", {
+            business_name: logoData.business_name,
+            style: logoData.style,
+            industry: logoData.industry,
+            logo_url_length: logoData.logo_url?.length,
+            logo_url_type: typeof logoData.logo_url,
+          });
+
+          const { data, error } = await supabase
+            .from("logos")
+            .insert(logoData)
+            .select();
+
+          if (error) {
+            console.error("❌ Supabase Insert Error:", error);
+            console.error(
+              "Error details:",
+              error.details,
+              error.hint,
+              error.code
+            );
+            setSaveError(`Failed to save: ${error.message}`);
+          } else {
+            console.log("✅ Logo saved to history successfully!", data);
+            setSavedLogoUrl(logoPng); // Mark as saved
+          }
+        } catch (err) {
+          console.error("❌ Unexpected error saving logo:", err);
+          setSaveError("Unexpected error occurred while saving.");
+        }
+      } else {
+        console.log("⏸️ Auto-save skipped - conditions not met:", {
+          reason: !logoPng
+            ? "No logoPng"
+            : !user
+            ? "No user"
+            : status !== "complete"
+            ? `Status is ${status}`
+            : logoPng === savedLogoUrl
+            ? "Already saved"
+            : !brand
+            ? "No brand"
+            : "Unknown",
+        });
+      }
+    };
+
+    saveToHistory();
+  }, [
+    logoPng,
+    user,
+    savedLogoUrl,
+    brand,
+    businessName,
+    style,
+    industry,
+    status,
+    supabase,
+  ]);
+
+  // --- HANDLERS ---
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/");
@@ -129,48 +237,63 @@ export default function Dashboard() {
 
   const handleGenerateLogo = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Reset any previous generation state to prevent "stale" saves
+    reset();
+    setSavedLogoUrl(null);
+    setSaveError(null);
+
+    // 2. Trigger new generation
     await generateLogo(businessName, style, industry, user?.id);
   };
 
   const handleNewLogo = () => {
     setShowGenerator(true);
     reset();
+    setSavedLogoUrl(null);
+    setSaveError(null);
     setBusinessName("");
   };
 
   const handleCloseGenerator = () => {
     setShowGenerator(false);
     reset();
+    setSavedLogoUrl(null);
   };
 
   // Navigation Helpers
   const navigateToHome = () => {
     setShowGenerator(false);
     reset();
+    setSavedLogoUrl(null);
     setCurrentView("home");
   };
 
   const navigateToHistory = () => {
     setShowGenerator(false);
     reset();
+    setSavedLogoUrl(null);
     setCurrentView("history");
   };
 
   const navigateToArchive = () => {
     setShowGenerator(false);
     reset();
+    setSavedLogoUrl(null);
     setCurrentView("archive");
   };
 
   const navigateToSettings = () => {
     setShowGenerator(false);
     reset();
+    setSavedLogoUrl(null);
     setCurrentView("settings");
   };
 
   const navigateToProfile = () => {
     setShowGenerator(false);
     reset();
+    setSavedLogoUrl(null);
     setCurrentView("profile");
   };
 
@@ -193,8 +316,8 @@ export default function Dashboard() {
       {/* === Sidebar === */}
       <aside className="hidden w-64 flex-col border-r bg-white p-4 sm:flex">
         <div className="flex items-center gap-2 px-2 py-4">
-          <div 
-            className="text-3xl font-bold text-gray-900 font-dm-serif cursor-pointer" 
+          <div
+            className="text-3xl font-bold text-gray-900 font-dm-serif cursor-pointer"
             onClick={navigateToHome}
           >
             aura<span className="text-emerald-500">+</span>
@@ -206,22 +329,34 @@ export default function Dashboard() {
             <span className="px-3 text-xs font-medium uppercase text-gray-500">
               General
             </span>
-            <Button 
-              variant={currentView === "home" && !showGenerator && !brand ? "secondary" : "ghost"} 
-              className="w-full justify-start gap-2" 
+            <Button
+              variant={
+                currentView === "home" && !showGenerator && !brand
+                  ? "secondary"
+                  : "ghost"
+              }
+              className="w-full justify-start gap-2"
               onClick={navigateToHome}
             >
               <Home className="h-4 w-4" /> Home
             </Button>
-            <Button 
-              variant={currentView === "history" && !showGenerator && !brand ? "secondary" : "ghost"} 
-              className="w-full justify-start gap-2" 
+            <Button
+              variant={
+                currentView === "history" && !showGenerator && !brand
+                  ? "secondary"
+                  : "ghost"
+              }
+              className="w-full justify-start gap-2"
               onClick={navigateToHistory}
             >
               <History className="h-4 w-4" /> History
             </Button>
-            <Button 
-              variant={currentView === "archive" && !showGenerator && !brand ? "secondary" : "ghost"} 
+            <Button
+              variant={
+                currentView === "archive" && !showGenerator && !brand
+                  ? "secondary"
+                  : "ghost"
+              }
               className="w-full justify-start gap-2"
               onClick={navigateToArchive}
             >
@@ -246,9 +381,13 @@ export default function Dashboard() {
             <span className="px-3 text-xs font-medium uppercase text-gray-500">
               Other
             </span>
-            <Button 
-              variant={currentView === "settings" && !showGenerator && !brand ? "secondary" : "ghost"}
-              className="w-full justify-start gap-2" 
+            <Button
+              variant={
+                currentView === "settings" && !showGenerator && !brand
+                  ? "secondary"
+                  : "ghost"
+              }
+              className="w-full justify-start gap-2"
               onClick={navigateToSettings}
             >
               <Settings className="h-4 w-4" /> Settings
@@ -333,16 +472,19 @@ export default function Dashboard() {
 
         {/* === Scrolling Content === */}
         <main className="flex-1 overflow-auto p-6">
-          
-          {/* CASE 1: Navigation Views (Home, History, Archive, Settings, Profile) */}
+          {/* CASE 1: Navigation Views */}
           {!showGenerator && !brand && (
-             <>
-                {currentView === 'home' && <DashboardHome onNewLogo={handleNewLogo} />}
-                {currentView === 'history' && <DashboardHistory onNewLogo={handleNewLogo} />}
-                {currentView === 'archive' && <DashboardArchive />}
-                {currentView === 'settings' && <DashboardSettings />}
-                {currentView === 'profile' && <DashboardProfile user={user} />}
-             </>
+            <>
+              {currentView === "home" && (
+                <DashboardHome onNewLogo={handleNewLogo} />
+              )}
+              {currentView === "history" && (
+                <DashboardHistory onNewLogo={handleNewLogo} />
+              )}
+              {currentView === "archive" && <DashboardArchive />}
+              {currentView === "settings" && <DashboardSettings />}
+              {currentView === "profile" && <DashboardProfile user={user} />}
+            </>
           )}
 
           {/* CASE 2: Show Generator Form */}
@@ -471,17 +613,19 @@ export default function Dashboard() {
                         Color Palette
                       </h4>
                       <div className="flex space-x-3">
-                        {brand.color_palette.map((color: string, index: number) => (
-                          <div
-                            key={index}
-                            className="w-12 h-12 rounded-xl border border-gray-300 shadow-sm transition-transform hover:scale-110 cursor-pointer"
-                            style={{ backgroundColor: color }}
-                            title={color}
-                            onClick={() => {
+                        {brand.color_palette.map(
+                          (color: string, index: number) => (
+                            <div
+                              key={index}
+                              className="w-12 h-12 rounded-xl border border-gray-300 shadow-sm transition-transform hover:scale-110 cursor-pointer"
+                              style={{ backgroundColor: color }}
+                              title={color}
+                              onClick={() => {
                                 navigator.clipboard.writeText(color);
-                            }}
-                          />
-                        ))}
+                              }}
+                            />
+                          )
+                        )}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -543,6 +687,23 @@ export default function Dashboard() {
                   </CardFooter>
                 </Card>
               </div>
+            </div>
+          )}
+
+          {/* Optional Error Toast/Display */}
+          {saveError && (
+            <div
+              className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+              role="alert"
+            >
+              <strong className="font-bold">Save Error: </strong>
+              <span className="block sm:inline">{saveError}</span>
+              <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
+                <X
+                  className="h-4 w-4 cursor-pointer"
+                  onClick={() => setSaveError(null)}
+                />
+              </span>
             </div>
           )}
         </main>
