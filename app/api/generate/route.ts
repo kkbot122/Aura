@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { groqClient } from '@/lib/api-clients';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client with error handling
+// Initialize Supabase client
 let supabase;
 try {
   supabase = createClient(
@@ -16,39 +16,37 @@ try {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Received request body:', body);
+    console.log('Received enhanced brand generation request:', body);
 
-    const { businessName, style, industry, userId } = body;
+    const { businessName, style, industry, description, userId } = body;
 
-    if (!businessName || !style || !industry) {
-      console.error('Missing required fields:', { businessName, style, industry });
+    if (!businessName || !style || !industry || !description) {
       return NextResponse.json(
-        { error: 'Missing required fields: businessName, style, industry' },
+        { error: 'Missing required fields: businessName, style, industry, description' },
         { status: 400 }
       );
     }
 
-    // Validate environment variables
     if (!process.env.GROQ_API_KEY) {
-      console.error('GROQ_API_KEY is missing');
       return NextResponse.json(
         { error: 'Server configuration error' },
         { status: 500 }
       );
     }
 
-    console.log('Generating brand identity with:', { businessName, style, industry });
+    console.log('Generating comprehensive brand identity...');
 
-    // Generate brand identity using Groq
-    const brandIdentity = await groqClient.generateBrandIdentity(
+    // Use the correct method name - generateComprehensiveBrandIdentity
+    const brandIdentity = await groqClient.generateComprehensiveBrandIdentity(
       businessName,
-      style,
-      industry
+      style, 
+      industry,
+      description
     );
 
-    console.log('Brand identity generated:', brandIdentity);
+    console.log('Comprehensive brand identity generated:', brandIdentity);
 
-    // Save to Supabase if user is logged in and Supabase is configured
+    // Save to enhanced database structure
     if (userId && supabase) {
       try {
         const { data, error } = await supabase
@@ -58,6 +56,7 @@ export async function POST(request: NextRequest) {
             business_name: businessName,
             style,
             industry,
+            description,
             brand_data: brandIdentity,
             status: 'brand_generated'
           })
@@ -81,7 +80,6 @@ export async function POST(request: NextRequest) {
 
       } catch (dbError) {
         console.error('Database error:', dbError);
-        // Continue without saving to database
         return NextResponse.json({
           success: true,
           data: brandIdentity
@@ -95,17 +93,11 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Brand generation error:', error);
+    console.error('Enhanced brand generation error:', error);
     
-    // Provide more specific error messages
-    let errorMessage = 'Failed to generate brand identity';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
-
     return NextResponse.json(
       { 
-        error: errorMessage,
+        error: error instanceof Error ? error.message : 'Failed to generate brand identity',
         details: process.env.NODE_ENV === 'development' ? error : undefined
       },
       { status: 500 }

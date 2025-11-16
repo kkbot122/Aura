@@ -4,7 +4,7 @@ import { cloudflareAI } from '@/lib/api-clients';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Logo generation request received');
+    console.log('Enhanced logo generation request received');
 
     const { brandData, projectId } = body;
 
@@ -15,65 +15,78 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build a simple, effective logo prompt
-    const logoPrompt = `
-      minimalist logo for ${brandData.business_name}, 
-      ${brandData.style} style, 
-      ${brandData.industry} industry,
-      clean vector logo, professional, white background,
-      simple geometric shapes, no text, no complex details
-    `.trim();
+    // Generate multiple logo variations
+    const logoVariations = [
+      {
+        name: "primary",
+        prompt: `minimalist professional logo for ${brandData.business_name}, ${brandData.design_style} style, ${brandData.logo_direction.concept}, clean vector design, white background, professional business logo`
+      },
+      {
+        name: "monochrome", 
+        prompt: `monochrome black and white logo for ${brandData.business_name}, ${brandData.design_style} style, ${brandData.logo_direction.concept}, clean vector design, white background, single color`
+      },
+      {
+        name: "icon",
+        prompt: `icon version of logo for ${brandData.business_name}, ${brandData.design_style} style, ${brandData.logo_direction.concept}, simple icon, clean vector, white background, app icon style`
+      }
+    ];
 
-    console.log('Generating logo with prompt:', logoPrompt);
+    console.log('Generating multiple logo variations...');
 
-    // Generate logo image using Cloudflare AI
-    let logoImageBase64;
-    try {
-      logoImageBase64 = await cloudflareAI.generateLogo(logoPrompt);
-      console.log('Logo generated successfully, base64 length:', logoImageBase64?.length);
-    } catch (aiError) {
-      console.error('Cloudflare AI failed:', aiError);
-      
-      // Return a fallback response instead of failing completely
-      return NextResponse.json({
-        success: true,
-        data: {
-          logo_png: `https://via.placeholder.com/512/0066FF/FFFFFF?text=${encodeURIComponent(brandData.business_name.substring(0, 10))}`,
-          logo_prompt: logoPrompt,
-          note: 'Fallback placeholder - AI generation failed'
+    const logoResults = {};
+    
+    for (const variation of logoVariations) {
+      try {
+        const logoImageBase64 = await cloudflareAI.generateLogo(variation.prompt);
+        
+        if (logoImageBase64) {
+          logoResults[variation.name] = {
+            logo_png: `data:image/png;base64,${logoImageBase64}`,
+            prompt: variation.prompt
+          };
+          console.log(`✅ Generated ${variation.name} logo`);
         }
-      });
+      } catch (variationError) {
+        console.error(`Failed to generate ${variation.name} logo:`, variationError);
+        // Continue with other variations
+      }
     }
 
-    if (!logoImageBase64) {
-      throw new Error('No image data received from Cloudflare AI');
-    }
-
-    // Create a data URL for the image
-    const dataUrl = `data:image/png;base64,${logoImageBase64}`;
-
-    console.log('Logo generation completed successfully');
+    console.log('Logo variations generation completed');
+    
     return NextResponse.json({
       success: true,
       data: {
-        logo_png: dataUrl, // Use data URL instead of trying to upload to storage
-        logo_prompt: logoPrompt
+        logo_variations: logoResults,
+        primary_logo: logoResults.primary?.logo_png || Object.values(logoResults)[0]?.logo_png
       }
     });
 
   } catch (error) {
-    console.error('Logo generation error:', error);
+    console.error('Enhanced logo generation error:', error);
     
-    // Provide a helpful fallback
-    const fallbackUrl = `https://via.placeholder.com/512/333333/FFFFFF?text=Logo+Error`;
-    
-    return NextResponse.json({
-      success: true, // Still return success but with fallback
-      data: {
-        logo_png: fallbackUrl,
-        logo_prompt: 'Fallback due to error',
-        note: 'Logo generation encountered an error, using fallback image'
-      }
-    });
+    // Fallback to single logo generation
+    try {
+      const fallbackPrompt = `minimalist logo for ${body.brandData.business_name}, clean vector design, white background`;
+      const fallbackLogo = await cloudflareAI.generateLogo(fallbackPrompt);
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          logo_variations: {
+            primary: {
+              logo_png: `data:image/png;base64,${fallbackLogo}`,
+              prompt: fallbackPrompt
+            }
+          },
+          primary_logo: `data:image/png;base64,${fallbackLogo}`
+        }
+      });
+    } catch (fallbackError) {
+      return NextResponse.json({
+        success: false,
+        error: 'Logo generation failed completely'
+      }, { status: 500 });
+    }
   }
 }

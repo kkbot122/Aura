@@ -1,23 +1,44 @@
-import { useState } from 'react';
+import { useState } from "react";
 
+// Updated interface to match the new comprehensive brand identity structure
 interface BrandIdentity {
   business_name: string;
-  style: string;
   tagline: string;
   brand_description: string;
-  color_palette: string[];
-  design_style: string;
-  target_audience: string;
-  brand_values: string[];
-  typography_suggestions: string[];
-  logo_direction: string;
+  mission_statement?: string;
+  core_values?: string[];
+  color_palette?: Array<{
+    name: string;
+    hex: string;
+    usage: string;
+  }>;
+  design_style?: string;
+  typography?: {
+    primary?: string;
+    secondary?: string;
+    accent?: string;
+  };
+  target_audience?: {
+    primary?: string;
+    secondary?: string;
+  };
+  brand_personality?: {
+    traits?: string[];
+    tone_of_voice?: string;
+  };
+  logo_direction?: {
+    concept?: string;
+    symbolism?: string;
+    style_notes?: string;
+  };
 }
 
 interface GenerationState {
   brand: BrandIdentity | null;
   logoPng: string | null;
+  logoVariations?: any; // Add this for logo variations
   projectId: string | null;
-  status: 'idle' | 'generating_brand' | 'generating_logo' | 'complete' | 'error';
+  status: "idle" | "generating_brand" | "generating_logo" | "complete" | "error";
   error: string | null;
 }
 
@@ -25,73 +46,82 @@ export function useLogoGeneration() {
   const [state, setState] = useState<GenerationState>({
     brand: null,
     logoPng: null,
+    logoVariations: null,
     projectId: null,
-    status: 'idle',
-    error: null
+    status: "idle",
+    error: null,
   });
 
-  const generateLogo = async (businessName: string, style: string, industry: string, userId?: string) => {
-    setState(prev => ({ ...prev, status: 'generating_brand', error: null }));
+  const generateLogo = async (
+    businessName: string,
+    style: string,
+    industry: string,
+    description: string,
+    userId?: string
+  ) => {
+    setState((prev) => ({ ...prev, status: "generating_brand", error: null }));
 
     try {
-      // Step 1: Generate Brand Identity
-      console.log('Step 1: Generating brand identity...');
-      const brandResponse = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessName, style, industry, userId }),
+      // Step 1: Generate Enhanced Brand Identity
+      console.log("Step 1: Generating comprehensive brand identity...");
+      const brandResponse = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName,
+          style,
+          industry,
+          description,
+          userId,
+        }),
       });
 
       if (!brandResponse.ok) {
         const errorText = await brandResponse.text();
         throw new Error(`Brand generation failed: ${errorText}`);
       }
-      
-      const brandResult = await brandResponse.json();
-      console.log('Brand generation successful:', brandResult);
 
-      setState(prev => ({ 
-        ...prev, 
+      const brandResult = await brandResponse.json();
+      console.log("Enhanced brand identity generated:", brandResult);
+
+      setState((prev) => ({
+        ...prev,
         brand: brandResult.data,
-        projectId: brandResult.data.project_id || null,
-        status: 'generating_logo' 
+        projectId: brandResult.data?.project_id || null,
+        status: "generating_logo",
       }));
 
-      // Step 2: Generate Logo Image
-      console.log('Step 2: Generating logo...');
-      const logoResponse = await fetch('/api/generate-logo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      // Step 2: Generate Multiple Logo Variations
+      console.log("Step 2: Generating logo variations...");
+      const logoResponse = await fetch("/api/generate-logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           brandData: brandResult.data,
-          projectId: brandResult.data.project_id 
+          projectId: brandResult.data?.project_id,
         }),
       });
 
       if (!logoResponse.ok) {
         const errorData = await logoResponse.json();
-        throw new Error(errorData.error || 'Logo generation failed');
+        throw new Error(errorData.error || "Logo generation failed");
       }
-      
+
       const logoResult = await logoResponse.json();
-      console.log('Logo generation result:', logoResult);
+      console.log("Logo variations result:", logoResult);
 
-      if (!logoResult.data || !logoResult.data.logo_png) {
-        throw new Error('No logo image received');
-      }
-
-      setState(prev => ({ 
-        ...prev, 
-        logoPng: logoResult.data.logo_png,
-        status: 'complete' 
-      }));
-
-    } catch (error) {
-      console.error('Generation pipeline error:', error);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Generation failed'
+        logoPng: logoResult.data?.primary_logo || logoResult.data?.logo_variations?.primary?.logo_png,
+        logoVariations: logoResult.data?.logo_variations,
+        status: "complete",
+      }));
+    } catch (error) {
+      console.error("Generation pipeline error:", error);
+      setState((prev) => ({
+        ...prev,
+        status: "error",
+        error: error instanceof Error ? error.message : "Generation failed",
       }));
     }
   };
@@ -100,9 +130,10 @@ export function useLogoGeneration() {
     setState({
       brand: null,
       logoPng: null,
+      logoVariations: null,
       projectId: null,
-      status: 'idle',
-      error: null
+      status: "idle",
+      error: null,
     });
   };
 
@@ -110,6 +141,6 @@ export function useLogoGeneration() {
     ...state,
     generateLogo,
     reset,
-    loading: state.status !== 'idle' && state.status !== 'complete' && state.status !== 'error'
+    loading: state.status === "generating_brand" || state.status === "generating_logo",
   };
 }
