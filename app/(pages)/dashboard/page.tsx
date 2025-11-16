@@ -5,17 +5,79 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLogoGeneration } from "@/hooks/useLogoGeneration";
 
+// Import the separated components
+import { DashboardHome } from "@/app/(pages)/home/page"; // <--- Imported here
+import { DashboardHistory } from "@/app/(pages)/history/page"; // <--- Imported here
+import { DashboardSettings } from "@/app/(pages)/settings/page"; // <--- Imported here
+import { DashboardProfile } from "@/app/(pages)/profile/page"; // <--- Imported here
+import { DashboardArchive } from "@/app/(pages)/archive/page"; // <--- Imported here
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Home,
+  History,
+  Archive,
+  Image as ImageIcon,
+  Settings,
+  HelpCircle,
+  CreditCard,
+  User,
+  Search,
+  Bell,
+  ChevronDown,
+  Loader2,
+  Download,
+  X,
+} from "lucide-react";
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // VIEW STATE
+  // 'home', 'history', 'archive', 'settings', 'profile'
+  const [currentView, setCurrentView] = useState("home"); 
+  
   const [showGenerator, setShowGenerator] = useState(false);
   const [businessName, setBusinessName] = useState("");
-  const [style, setStyle] = useState("futuristic");
-  const [industry, setIndustry] = useState("tech");
-  
+  const [style, setStyle] = useState("");
+  const [industry, setIndustry] = useState("");
+
   const supabase = createClient();
   const router = useRouter();
-  const { generateLogo, brand, logoPng, loading: generating, error, status, reset } = useLogoGeneration();
+  const {
+    generateLogo,
+    brand,
+    logoPng,
+    loading: generating,
+    error,
+    status,
+    reset,
+  } = useLogoGeneration();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -81,323 +143,410 @@ export default function Dashboard() {
     reset();
   };
 
+  // Navigation Helpers
+  const navigateToHome = () => {
+    setShowGenerator(false);
+    reset();
+    setCurrentView("home");
+  };
+
+  const navigateToHistory = () => {
+    setShowGenerator(false);
+    reset();
+    setCurrentView("history");
+  };
+
+  const navigateToArchive = () => {
+    setShowGenerator(false);
+    reset();
+    setCurrentView("archive");
+  };
+
+  const navigateToSettings = () => {
+    setShowGenerator(false);
+    reset();
+    setCurrentView("settings");
+  };
+
+  const navigateToProfile = () => {
+    setShowGenerator(false);
+    reset();
+    setCurrentView("profile");
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-2xl font-notable text-gray-900 mb-4">
+          <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+          <div className="text-2xl font-semibold text-gray-900 mb-2">
             Loading...
           </div>
-          <div className="text-gray-600 font-dm-serif">
-            Preparing your dashboard
-          </div>
+          <div className="text-gray-600">Preparing your dashboard</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Navigation */}
-      <nav className="px-6 py-5 flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center">
-          <div className="text-2xl font-bold text-gray-900 font-dm-serif">
+    <div className="flex min-h-screen w-full bg-gray-100/40">
+      {/* === Sidebar === */}
+      <aside className="hidden w-64 flex-col border-r bg-white p-4 sm:flex">
+        <div className="flex items-center gap-2 px-2 py-4">
+          <div 
+            className="text-3xl font-bold text-gray-900 font-dm-serif cursor-pointer" 
+            onClick={navigateToHome}
+          >
             aura<span className="text-emerald-500">+</span>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <div className="text-gray-700 font-dm-serif">
-            Welcome, {user?.email?.split("@")[0]}
+        <nav className="flex flex-1 flex-col gap-2">
+          <div className="mb-2">
+            <span className="px-3 text-xs font-medium uppercase text-gray-500">
+              General
+            </span>
+            <Button 
+              variant={currentView === "home" && !showGenerator && !brand ? "secondary" : "ghost"} 
+              className="w-full justify-start gap-2" 
+              onClick={navigateToHome}
+            >
+              <Home className="h-4 w-4" /> Home
+            </Button>
+            <Button 
+              variant={currentView === "history" && !showGenerator && !brand ? "secondary" : "ghost"} 
+              className="w-full justify-start gap-2" 
+              onClick={navigateToHistory}
+            >
+              <History className="h-4 w-4" /> History
+            </Button>
+            <Button 
+              variant={currentView === "archive" && !showGenerator && !brand ? "secondary" : "ghost"} 
+              className="w-full justify-start gap-2"
+              onClick={navigateToArchive}
+            >
+              <Archive className="h-4 w-4" /> Archive
+            </Button>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="px-5 py-2 text-gray-700 hover:text-gray-900 transition-colors font-dm-serif"
+
+          <div className="mb-2">
+            <span className="px-3 text-xs font-medium uppercase text-gray-500">
+              AI Tools
+            </span>
+            <Button
+              variant={showGenerator || brand ? "secondary" : "ghost"}
+              className="w-full justify-start gap-2"
+              onClick={handleNewLogo}
+            >
+              <ImageIcon className="h-4 w-4" /> Image Generator
+            </Button>
+          </div>
+
+          <div className="mb-2">
+            <span className="px-3 text-xs font-medium uppercase text-gray-500">
+              Other
+            </span>
+            <Button 
+              variant={currentView === "settings" && !showGenerator && !brand ? "secondary" : "ghost"}
+              className="w-full justify-start gap-2" 
+              onClick={navigateToSettings}
+            >
+              <Settings className="h-4 w-4" /> Settings
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-2">
+              <HelpCircle className="h-4 w-4" /> Help Center
+            </Button>
+          </div>
+        </nav>
+
+        <div className="mt-auto">
+          <Button
+            size="sm"
+            className="mt-4 w-full bg-violet-600 hover:bg-violet-700"
           >
-            Sign Out
-          </button>
+            <CreditCard className="mr-2 h-4 w-4" /> Upgraded to Pro
+          </Button>
         </div>
-      </nav>
+      </aside>
 
-      {/* Dashboard Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2 font-notable">
-            Your Design Dashboard
-          </h1>
-          <p className="text-gray-600 font-dm-serif">
-            Create and manage your AI-powered logos and brand assets
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="text-2xl font-bold text-gray-900 mb-2 font-notable">
-              {brand ? 1 : 0}
+      {/* === Main Content Area === */}
+      <div className="flex flex-1 flex-col">
+        {/* === Header === */}
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-6">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+              <Input
+                placeholder="Search..."
+                className="w-full max-w-sm rounded-full bg-gray-100 pl-10"
+              />
             </div>
-            <div className="text-gray-600 font-dm-serif">Active Generation</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="text-2xl font-bold text-gray-900 mb-2 font-notable">
-              3
-            </div>
-            <div className="text-gray-600 font-dm-serif">Saved Projects</div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="text-2xl font-bold text-gray-900 mb-2 font-notable">
-              12
-            </div>
-            <div className="text-gray-600 font-dm-serif">Design Elements</div>
-          </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <button 
-            onClick={handleNewLogo}
-            className="bg-emerald-500 hover:bg-emerald-600 text-gray-900 rounded-2xl p-6 text-center transition-colors group"
-          >
-            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">🎨</div>
-            <div className="font-dm-serif font-semibold">Create New Logo</div>
-          </button>
-          <button className="bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center transition-colors group">
-            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">📁</div>
-            <div className="font-dm-serif font-semibold">My Projects</div>
-          </button>
-          <button className="bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center transition-colors group">
-            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">🎯</div>
-            <div className="font-dm-serif font-semibold">Templates</div>
-          </button>
-          <button className="bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center transition-colors group">
-            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">⚙️</div>
-            <div className="font-dm-serif font-semibold">Settings</div>
-          </button>
-        </div>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm">
+              What's New? ✨
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2">
+              English <ChevronDown className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Bell className="h-5 w-5" />
+            </Button>
 
-        {/* AI Logo Generator */}
-        {showGenerator && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 font-notable">
-                AI Logo Generator
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>
+                      {user?.email?.charAt(0).toUpperCase() || "A"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden md:inline">
+                    {user?.email?.split("@")[0] || "User"}
+                  </span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={navigateToSettings}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={navigateToProfile}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-red-500"
+                >
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {/* === Scrolling Content === */}
+        <main className="flex-1 overflow-auto p-6">
+          
+          {/* CASE 1: Navigation Views (Home, History, Archive, Settings, Profile) */}
+          {!showGenerator && !brand && (
+             <>
+                {currentView === 'home' && <DashboardHome onNewLogo={handleNewLogo} />}
+                {currentView === 'history' && <DashboardHistory onNewLogo={handleNewLogo} />}
+                {currentView === 'archive' && <DashboardArchive />}
+                {currentView === 'settings' && <DashboardSettings />}
+                {currentView === 'profile' && <DashboardProfile user={user} />}
+             </>
+          )}
+
+          {/* CASE 2: Show Generator Form */}
+          {showGenerator && (
+            <Card className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-2xl font-bold">
+                  AI Logo Generator
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCloseGenerator}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleGenerateLogo} className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Business Name
+                      </label>
+                      <Input
+                        type="text"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        placeholder="e.g., 'Aura+'"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Style
+                      </label>
+                      <Select value={style} onValueChange={setStyle}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a style" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="futuristic">Futuristic</SelectItem>
+                          <SelectItem value="minimal">Minimal</SelectItem>
+                          <SelectItem value="organic">Organic</SelectItem>
+                          <SelectItem value="tech">Tech</SelectItem>
+                          <SelectItem value="luxury">Luxury</SelectItem>
+                          <SelectItem value="playful">Playful</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Industry
+                      </label>
+                      <Select value={industry} onValueChange={setIndustry}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an industry" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="tech">Technology</SelectItem>
+                          <SelectItem value="fintech">Fintech</SelectItem>
+                          <SelectItem value="healthcare">Healthcare</SelectItem>
+                          <SelectItem value="wellness">Wellness</SelectItem>
+                          <SelectItem value="education">Education</SelectItem>
+                          <SelectItem value="retail">Retail</SelectItem>
+                          <SelectItem value="food">Food & Beverage</SelectItem>
+                          <SelectItem value="creative">
+                            Creative Agency
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={generating || !businessName}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-base"
+                    size="lg"
+                  >
+                    {generating ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Generating... ({status})</span>
+                      </div>
+                    ) : (
+                      "Generate Logo & Brand Identity"
+                    )}
+                  </Button>
+                </form>
+
+                {error && (
+                  <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
+                    <p className="text-sm font-medium text-red-800">{error}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CASE 3: Show Results */}
+          {brand && (
+            <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Your Generated Brand
               </h2>
-              <button
-                onClick={handleCloseGenerator}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                {/* Brand Details Card */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Brand Identity</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div>
+                      <h4 className="font-medium text-gray-700">Tagline</h4>
+                      <p className="text-lg text-gray-900">{brand.tagline}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700">Description</h4>
+                      <p className="text-gray-900 leading-relaxed">
+                        {brand.brand_description}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-3">
+                        Color Palette
+                      </h4>
+                      <div className="flex space-x-3">
+                        {brand.color_palette.map((color: string, index: number) => (
+                          <div
+                            key={index}
+                            className="w-12 h-12 rounded-xl border border-gray-300 shadow-sm transition-transform hover:scale-110 cursor-pointer"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                            onClick={() => {
+                                navigator.clipboard.writeText(color);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-gray-700">
+                          Design Style
+                        </h4>
+                        <p className="text-gray-900">{brand.design_style}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-700">
+                          Target Audience
+                        </h4>
+                        <p className="text-gray-900">{brand.target_audience}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <form onSubmit={handleGenerateLogo} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-dm-serif">
-                    Business Name
-                  </label>
-                  <input
-                    type="text"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-dm-serif"
-                    placeholder="Enter business name"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-dm-serif">
-                    Style
-                  </label>
-                  <select
-                    value={style}
-                    onChange={(e) => setStyle(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-dm-serif"
-                  >
-                    <option value="futuristic">Futuristic</option>
-                    <option value="minimal">Minimal</option>
-                    <option value="organic">Organic</option>
-                    <option value="tech">Tech</option>
-                    <option value="luxury">Luxury</option>
-                    <option value="playful">Playful</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-dm-serif">
-                    Industry
-                  </label>
-                  <select
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-dm-serif"
-                  >
-                    <option value="tech">Technology</option>
-                    <option value="fintech">Fintech</option>
-                    <option value="healthcare">Healthcare</option>
-                    <option value="wellness">Wellness</option>
-                    <option value="education">Education</option>
-                    <option value="retail">Retail</option>
-                    <option value="food">Food & Beverage</option>
-                    <option value="creative">Creative Agency</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={generating || !businessName}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-gray-900 py-4 px-6 rounded-xl font-dm-serif font-semibold transition-colors disabled:cursor-not-allowed"
-              >
-                {generating ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Generating... ({status})</span>
-                  </div>
-                ) : (
-                  "Generate Logo & Brand Identity"
-                )}
-              </button>
-            </form>
-
-            {/* Error Display */}
-            {error && (
-              <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-red-800 font-dm-serif">{error}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Results Display */}
-        {brand && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 font-notable">
-              Your Generated Brand
-            </h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Brand Details */}
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-gray-900 font-dm-serif">
-                  Brand Identity
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-gray-700 font-dm-serif">Tagline</h4>
-                    <p className="text-gray-900 font-dm-serif text-lg">{brand.tagline}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium text-gray-700 font-dm-serif">Description</h4>
-                    <p className="text-gray-900 font-dm-serif leading-relaxed">{brand.brand_description}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium text-gray-700 font-dm-serif mb-3">Color Palette</h4>
-                    <div className="flex space-x-3">
-                      {brand.color_palette.map((color, index) => (
-                        <div
-                          key={index}
-                          className="w-12 h-12 rounded-xl border border-gray-300 shadow-sm transition-transform hover:scale-110"
-                          style={{ backgroundColor: color }}
-                          title={color}
+                {/* Logo Preview Card */}
+                <Card className="lg:col-span-1">
+                  <CardHeader>
+                    <CardTitle>Generated Logo</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {logoPng ? (
+                      <div className="rounded-lg bg-gray-100 p-6 flex items-center justify-center border">
+                        <img
+                          src={logoPng}
+                          alt={`${brand.business_name} logo`}
+                          className="max-w-full max-h-64 object-contain"
                         />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium text-gray-700 font-dm-serif">Design Style</h4>
-                    <p className="text-gray-900 font-dm-serif">{brand.design_style}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium text-gray-700 font-dm-serif">Target Audience</h4>
-                    <p className="text-gray-900 font-dm-serif">{brand.target_audience}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Logo Preview */}
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-gray-900 font-dm-serif">
-                  Generated Logo
-                </h3>
-                
-                {logoPng ? (
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 flex items-center justify-center border border-gray-200">
-                    <img 
-                      src={logoPng} 
-                      alt={`${brand.business_name} logo`}
-                      className="max-w-full max-h-80 object-contain drop-shadow-lg"
-                    />
-                  </div>
-                ) : (
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 flex items-center justify-center min-h-64 border border-gray-200">
-                    <div className="text-center">
-                      <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                      <p className="text-gray-500 font-dm-serif">Generating your logo...</p>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex space-x-4">
-                  <button
-                    onClick={() => logoPng && window.open(logoPng, '_blank')}
-                    disabled={!logoPng}
-                    className="flex-1 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white py-3 px-6 rounded-xl font-dm-serif font-semibold transition-colors disabled:cursor-not-allowed"
-                  >
-                    Download PNG
-                  </button>
-                  <button
-                    onClick={handleNewLogo}
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-gray-900 py-3 px-6 rounded-xl font-dm-serif font-semibold transition-colors"
-                  >
-                    Create Another
-                  </button>
-                </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg bg-gray-100 p-6 flex items-center justify-center min-h-64 border">
+                        <div className="text-center">
+                          <Loader2 className="w-8 h-8 animate-spin text-gray-500 mx-auto mb-3" />
+                          <p className="text-gray-500">Generating logo...</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="flex-col space-y-3">
+                    <Button
+                      onClick={() => logoPng && window.open(logoPng, "_blank")}
+                      disabled={!logoPng}
+                      className="w-full"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download PNG
+                    </Button>
+                    <Button
+                      onClick={handleNewLogo}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Create Another
+                    </Button>
+                  </CardFooter>
+                </Card>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Recent Projects */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 font-notable">
-            Recent Projects
-          </h2>
-          <div className="space-y-4">
-            {[1, 2, 3].map((project) => (
-              <div
-                key={project}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-emerald-300 transition-colors"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold font-notable">
-                      L{project}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-dm-serif font-semibold text-gray-900">
-                      Brand Logo #{project}
-                    </div>
-                    <div className="text-sm text-gray-600 font-dm-serif">
-                      Last edited 2 days ago
-                    </div>
-                  </div>
-                </div>
-                <button className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-dm-serif text-sm transition-colors">
-                  Edit
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
