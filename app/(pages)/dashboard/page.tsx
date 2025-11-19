@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLogoGeneration } from "@/hooks/useLogoGeneration";
+import Image from "next/image";
 
 // Import the separated components
 import { DashboardHome } from "@/app/(pages)/home/page"; // <--- Imported here
@@ -463,7 +464,13 @@ export default function Dashboard() {
             className="text-3xl font-bold text-gray-900 font-dm-serif cursor-pointer"
             onClick={navigateToHome}
           >
-            aura<span className="text-emerald-500">+</span>
+            <Image
+              src="/Aura-logo.png" // path from public folder
+              alt="Aura+ Logo"
+              width={120} // adjust as needed
+              height={40} // adjust as needed
+              className="h-10 md:h-10 lg:h-15 w-auto" // or use your own sizing
+            />
           </div>
         </div>
 
@@ -1099,7 +1106,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Mockups Generation */}
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                {/* <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Shirt className="h-8 w-8 text-green-500" />
                     <div>
@@ -1126,10 +1133,10 @@ export default function Dashboard() {
                       </>
                     )}
                   </Button>
-                </div>
+                </div> */}
 
                 {/* Mockups Display */}
-                {mockups.length > 0 && (
+                {/* {mockups.length > 0 && (
                   <div className="mt-6">
                     <h4 className="font-semibold mb-4">Product Mockups</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1159,7 +1166,7 @@ export default function Dashboard() {
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
               </CardContent>
             </Card>
           )}

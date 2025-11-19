@@ -1,14 +1,22 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div
+      className="min-h-screen bg-white from-gray-50 to-white"
+      style={{ fontFamily: "var(--font-playfair)" }}
+    >
       {/* Navigation */}
       <nav className="px-6 py-5 flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center">
-          <div className="text-2xl font-bold text-gray-900 font-dm-serif">
-            aura<span className="text-emerald-500">+</span>
-          </div>
+          <Image
+            src="/Aura-logo.png" // path from public folder
+            alt="Aura+ Logo"
+            width={120} // adjust as needed
+            height={40} // adjust as needed
+            className="h-10 md:h-10 lg:h-15 w-auto" // or use your own sizing
+          />
         </div>
 
         <div className="hidden md:flex items-center space-x-8">
@@ -49,22 +57,27 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <main className="px-6 pt-20 pb-32 max-w-6xl mx-auto text-center">
-        <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 leading-tight mb-6 font-notable">
+      <main className="px-6 pt-20 pb-32 max-w-6xl mx-auto text-center hero-bg w-full min-h-screen -mx-0">
+        <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 leading-tight mb-6 font-playfair">
           AI-Powered Logos to
           <br />
           Build Your Brand
         </h1>
 
-        <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto font-dm-serif-italic">
+        <p
+          className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto font-playfair"
+          style={{ fontFamily: "var(--font-playfair)" }}
+        >
           From startups to enterprises, use AI that captures your brand's vibe!
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <button className="px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-full font-dm-serif font-medium text-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+          <button
+            className="px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white rounded-full font-dm-serif font-medium text-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
             Start for free
           </button>
-          
         </div>
 
         {/* Demo Preview Card */}

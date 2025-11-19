@@ -1,8 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Pricing() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div
+      className="min-h-screen bg-gradient-to-b from-gray-50 to-white"
+      style={{ fontFamily: "var(--font-playfair)" }}
+    >
       <nav className="px-6 py-5 flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center">
           <div className="text-2xl font-bold text-gray-900 font-dm-serif">
@@ -10,7 +14,13 @@ export default function Pricing() {
               href="/"
               className="text-gray-700 hover:text-gray-900 transition-colors font-dm-serif"
             >
-              aura<span className="text-emerald-500">+</span>
+              <Image
+                src="/Aura-logo.png" // path from public folder
+                alt="Aura+ Logo"
+                width={120} // adjust as needed
+                height={40} // adjust as needed
+                className="h-10 md:h-10 lg:h-15 w-auto" // or use your own sizing
+              />
             </Link>
           </div>
         </div>
@@ -81,7 +91,10 @@ export default function Pricing() {
                 "Watermark on exports",
                 "Community support",
               ].map((feature, index) => (
-                <div key={index} className="text-black flex items-center font-dm-serif">
+                <div
+                  key={index}
+                  className="text-black flex items-center font-dm-serif"
+                >
                   <svg
                     className="w-5 h-5 text-emerald-500 mr-3"
                     fill="none"
@@ -194,7 +207,10 @@ export default function Pricing() {
                 "Dedicated account manager",
                 "API access",
               ].map((feature, index) => (
-                <div key={index} className="text-black flex items-center font-dm-serif">
+                <div
+                  key={index}
+                  className="text-black flex items-center font-dm-serif"
+                >
                   <svg
                     className="w-5 h-5 text-emerald-500 mr-3"
                     fill="none"

@@ -44,7 +44,8 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-html, body {
+html,
+body {
   background-color: white; /* or your desired background color */
   min-height: 100vh;
 }
@@ -127,4 +128,13 @@ html, body {
     background-color: var(--background);
     color: var(--foreground);
   }
+}
+
+.hero-bg {
+  background-image: url("/Grad_03.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 100%;
+  min-height: 100vh; /* Ensure full height too */
 }
