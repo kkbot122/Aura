@@ -6,12 +6,22 @@ import { useRouter } from "next/navigation";
 import { useLogoGeneration } from "@/hooks/useLogoGeneration";
 import Image from "next/image";
 
+// Type definition for FontDefinition
+type FontDefinition = {
+  name?: string;
+  usage?: string;
+  category?: string;
+  characteristics?: string;
+};
+
 // Import the separated components
-import { DashboardHome } from "@/app/(pages)/home/page"; // <--- Imported here
-import { DashboardHistory } from "@/app/(pages)/history/page"; // <--- Imported here
-import { DashboardSettings } from "@/app/(pages)/settings/page"; // <--- Imported here
-import { DashboardProfile } from "@/app/(pages)/profile/page"; // <--- Imported here
-import { DashboardArchive } from "@/app/(pages)/archive/page"; // <--- Imported here
+import { DashboardHome } from "@/app/(pages)/home/page";
+import { DashboardHistory } from "@/app/(pages)/history/page";
+import { DashboardSettings } from "@/app/(pages)/settings/page";
+import { DashboardProfile } from "@/app/(pages)/profile/page";
+import { DashboardArchive } from "@/app/(pages)/archive/page";
+import Sidebar from "@/app/(pages)/sidebar/page";
+import Header from "@/app/(pages)/header/page";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -95,25 +105,75 @@ export default function Dashboard() {
   const [mockups, setMockups] = useState<string[]>([]);
   const [generatingMockups, setGeneratingMockups] = useState(false);
 
+  const renderFont = (
+    font: FontDefinition | string | undefined,
+    title: string,
+    colorClass: string
+  ) => {
+    if (!font) return null;
+
+    // Handle string font (backward compatibility)
+    if (typeof font === "string") {
+      return (
+        <div className="p-3 border rounded">
+          <p className="font-semibold text-gray-900">
+            {title}: {font}
+          </p>
+        </div>
+      );
+    }
+
+    // Handle FontDefinition object
+    return (
+      <div className="p-4 border rounded-lg bg-gray-50">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <p className="font-semibold text-gray-900 text-lg">
+              {font.name || `${title} Font`}
+            </p>
+            <p className="text-sm text-gray-600">
+              {font.usage || `${title} font for brand elements`}
+            </p>
+          </div>
+          <span
+            className={`px-2 py-1 text-xs font-medium ${colorClass} rounded`}
+          >
+            {font.category || title}
+          </span>
+        </div>
+        {font.characteristics && (
+          <p className="text-sm text-gray-700 mt-2 italic">
+            {font.characteristics}
+          </p>
+        )}
+      </div>
+    );
+  };
+
   const handleGeneratePDF = async () => {
-    if (!brand || !logoPng) return;
+    // Add null check at the beginning
+    if (!brand || !logoPng) {
+      console.error("Missing brand data or logo");
+      return;
+    }
 
     setGeneratingPdf(true);
     try {
-      // Import PDFGenerator dynamically to avoid SSR issues
-      const { PDFGenerator } = await import("@/lib/pdf-generator");
+      const { PremiumPDFGenerator } = await import("@/lib/pdf-generator");
 
-      // Generate PDF directly in the client
-      const pdfBlob = await PDFGenerator.generateBrandBook(brand, logoPng);
+      // Now TypeScript knows brand is not null
+      const pdfBlob = await PremiumPDFGenerator.generateBrandBook({
+        brand: brand, // brand is guaranteed to be non-null here
+        primaryLogo: logoPng,
+        logoVariations: logoVariations || {},
+        mockups: [],
+      });
 
-      // Create URL for the blob
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setPdfUrl(pdfUrl);
-
       console.log("PDF generated successfully");
     } catch (error) {
       console.error("PDF generation error:", error);
-      // Fallback: Create a simple text-based PDF
       await generateFallbackPDF();
     } finally {
       setGeneratingPdf(false);
@@ -123,19 +183,29 @@ export default function Dashboard() {
   // Fallback PDF generation
   const generateFallbackPDF = async () => {
     try {
-      const { PDFGenerator } = await import("@/lib/pdf-generator");
-      // Simple text-based PDF without images
-      const pdfBlob = await PDFGenerator.generateBrandBook(brand, "");
+      if (!brand) {
+        console.error("No brand data available for fallback PDF");
+        return;
+      }
+
+      const { PremiumPDFGenerator } = await import("@/lib/pdf-generator");
+
+      const pdfBlob = await PremiumPDFGenerator.generateBrandBook({
+        brand: brand, // brand is checked above
+        primaryLogo: "",
+        logoVariations: {},
+        mockups: [],
+      });
+
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setPdfUrl(pdfUrl);
     } catch (fallbackError) {
       console.error("Fallback PDF generation also failed:", fallbackError);
-      // You can show a toast notification here
     }
   };
 
   const handleDownloadPDF = () => {
-    if (pdfUrl) {
+    if (pdfUrl && brand && brand.business_name) {
       const link = document.createElement("a");
       link.href = pdfUrl;
       link.download = `${brand.business_name.replace(
@@ -458,167 +528,26 @@ export default function Dashboard() {
   return (
     <div className="flex min-h-screen w-full bg-gray-100/40">
       {/* === Sidebar === */}
-      <aside className="hidden w-64 flex-col border-r bg-white p-4 sm:flex">
-        <div className="flex items-center gap-2 px-2 py-4">
-          <div
-            className="text-3xl font-bold text-gray-900 font-dm-serif cursor-pointer"
-            onClick={navigateToHome}
-          >
-            <Image
-              src="/Aura-logo.png" // path from public folder
-              alt="Aura+ Logo"
-              width={120} // adjust as needed
-              height={40} // adjust as needed
-              className="h-10 md:h-10 lg:h-15 w-auto" // or use your own sizing
-            />
-          </div>
-        </div>
-
-        <nav className="flex flex-1 flex-col gap-2">
-          <div className="mb-2">
-            <span className="px-3 text-xs font-medium uppercase text-gray-500">
-              General
-            </span>
-            <Button
-              variant={
-                currentView === "home" && !showGenerator && !brand
-                  ? "secondary"
-                  : "ghost"
-              }
-              className="w-full justify-start gap-2"
-              onClick={navigateToHome}
-            >
-              <Home className="h-4 w-4" /> Home
-            </Button>
-            <Button
-              variant={
-                currentView === "history" && !showGenerator && !brand
-                  ? "secondary"
-                  : "ghost"
-              }
-              className="w-full justify-start gap-2"
-              onClick={navigateToHistory}
-            >
-              <History className="h-4 w-4" /> History
-            </Button>
-            <Button
-              variant={
-                currentView === "archive" && !showGenerator && !brand
-                  ? "secondary"
-                  : "ghost"
-              }
-              className="w-full justify-start gap-2"
-              onClick={navigateToArchive}
-            >
-              <Archive className="h-4 w-4" /> Archive
-            </Button>
-          </div>
-
-          <div className="mb-2">
-            <span className="px-3 text-xs font-medium uppercase text-gray-500">
-              AI Tools
-            </span>
-            <Button
-              variant={showGenerator || brand ? "secondary" : "ghost"}
-              className="w-full justify-start gap-2"
-              onClick={handleNewLogo}
-            >
-              <ImageIcon className="h-4 w-4" /> Image Generator
-            </Button>
-          </div>
-
-          <div className="mb-2">
-            <span className="px-3 text-xs font-medium uppercase text-gray-500">
-              Other
-            </span>
-            <Button
-              variant={
-                currentView === "settings" && !showGenerator && !brand
-                  ? "secondary"
-                  : "ghost"
-              }
-              className="w-full justify-start gap-2"
-              onClick={navigateToSettings}
-            >
-              <Settings className="h-4 w-4" /> Settings
-            </Button>
-            <Button variant="ghost" className="w-full justify-start gap-2">
-              <HelpCircle className="h-4 w-4" /> Help Center
-            </Button>
-          </div>
-        </nav>
-
-        <div className="mt-auto">
-          <Button
-            size="sm"
-            className="mt-4 w-full bg-violet-600 hover:bg-violet-700"
-          >
-            <CreditCard className="mr-2 h-4 w-4" /> Upgraded to Pro
-          </Button>
-        </div>
-      </aside>
+      <Sidebar
+      currentView={currentView}
+      showGenerator={showGenerator}
+      brand={brand}
+      onNavigateHome={navigateToHome}
+      onNavigateHistory={navigateToHistory}
+      onNavigateArchive={navigateToArchive}
+      onNavigateSettings={navigateToSettings}
+      onNewLogo={handleNewLogo}
+    />
 
       {/* === Main Content Area === */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col sm:ml-64">
         {/* === Header === */}
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <Input
-                placeholder="Search..."
-                className="w-full max-w-sm rounded-full bg-gray-100 pl-10"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm">
-              What's New? ✨
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2">
-              English <ChevronDown className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>
-                      {user?.email?.charAt(0).toUpperCase() || "A"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden md:inline">
-                    {user?.email?.split("@")[0] || "User"}
-                  </span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={navigateToSettings}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={navigateToProfile}>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="text-red-500"
-                >
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
+        <Header
+        user={user}
+        onNavigateSettings={navigateToSettings}
+        onNavigateProfile={navigateToProfile}
+        onSignOut={handleSignOut}
+      />
 
         {/* === Scrolling Content === */}
         <main className="flex-1 overflow-auto p-6">
@@ -872,37 +801,31 @@ export default function Dashboard() {
                     )}
 
                     {/* Typography - Handle object properly */}
-                    {brand.typography &&
-                      typeof brand.typography === "object" && (
-                        <div>
-                          <h4 className="font-medium text-gray-700 mb-3">
-                            Typography
-                          </h4>
-                          <div className="space-y-2">
-                            {brand.typography.primary && (
-                              <div>
-                                <p className="font-semibold text-gray-900">
-                                  Primary: {brand.typography.primary}
-                                </p>
-                              </div>
-                            )}
-                            {brand.typography.secondary && (
-                              <div>
-                                <p className="font-semibold text-gray-900">
-                                  Secondary: {brand.typography.secondary}
-                                </p>
-                              </div>
-                            )}
-                            {brand.typography.accent && (
-                              <div>
-                                <p className="font-semibold text-gray-900">
-                                  Accent: {brand.typography.accent}
-                                </p>
-                              </div>
-                            )}
-                          </div>
+                    {brand.typography && (
+                      <div>
+                        <h4 className="font-medium text-gray-700 mb-3">
+                          Typography
+                        </h4>
+                        <div className="space-y-4">
+                          {/* Helper function to render font */}
+                          {renderFont(
+                            brand.typography.primary,
+                            "Primary",
+                            "bg-blue-100 text-blue-800"
+                          )}
+                          {renderFont(
+                            brand.typography.secondary,
+                            "Secondary",
+                            "bg-green-100 text-green-800"
+                          )}
+                          {renderFont(
+                            brand.typography.accent,
+                            "Accent",
+                            "bg-purple-100 text-purple-800"
+                          )}
                         </div>
-                      )}
+                      </div>
+                    )}
 
                     {/* Target Audience - Handle object properly */}
                     {brand.target_audience &&
@@ -1079,10 +1002,10 @@ export default function Dashboard() {
                   </div>
                   <div className="flex space-x-2">
                     {!pdfUrl ? (
-                      <Button
-                        onClick={handleGenerateCompleteBrandBook}
+                      <button
+                        onClick={handleGenerateCompleteBrandBook} // This calls the PDF generation
                         disabled={generatingPdf}
-                        variant="outline"
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {generatingPdf ? (
                           <>
@@ -1095,12 +1018,40 @@ export default function Dashboard() {
                             Generate PDF
                           </>
                         )}
-                      </Button>
+                      </button>
                     ) : (
-                      <Button onClick={handleDownloadPDF} variant="default">
+                      <button
+                        onClick={() => {
+                          console.log("Download button clicked");
+                          console.log("Current pdfUrl:", pdfUrl);
+                          console.log("Brand name:", brand?.business_name);
+
+                          // Create a fresh link each time
+                          const link = document.createElement("a");
+                          link.href = pdfUrl;
+                          link.download = `${
+                            brand?.business_name || "brand"
+                          }-identity-${Date.now()}.pdf`;
+                          link.style.display = "none";
+                          link.setAttribute("data-test", "pdf-download-link");
+
+                          // Add to document
+                          document.body.appendChild(link);
+
+                          // Trigger download
+                          link.click();
+
+                          // Clean up
+                          setTimeout(() => {
+                            document.body.removeChild(link);
+                            console.log("Download link cleaned up");
+                          }, 1000);
+                        }}
+                        className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
                         <Download className="mr-2 h-4 w-4" />
-                        Download PDF
-                      </Button>
+                        Download Brand PDF
+                      </button>
                     )}
                   </div>
                 </div>

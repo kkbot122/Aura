@@ -14,156 +14,216 @@ export class GroqClient {
   }
 
   async generateComprehensiveBrandIdentity(
-    businessName: string, 
-    style: string, 
-    industry: string, 
+    businessName: string,
+    style: string,
+    industry: string,
     description: string
   ) {
     const prompt = `
-Create a comprehensive brand identity for "${businessName}" - a ${industry} business with ${style} aesthetic.
+You are a professional brand strategist and identity designer. Create a complete, ready-to-implement brand identity for "${businessName}" - a ${industry} business with ${style} aesthetic.
 
 BUSINESS CONTEXT: ${description}
 
-Generate a complete brand identity package with this EXACT JSON structure:
+Generate a comprehensive brand identity package with this EXACT JSON structure:
 
 {
   "business_name": "${businessName}",
-  "tagline": "A catchy, memorable tagline under 8 words",
-  "brand_description": "A compelling 2-3 sentence brand story",
-  "mission_statement": "Clear and inspiring mission statement",
+  "tagline": "A memorable, compelling tagline under 8 words that captures the brand essence",
+  "brand_description": "A 2-3 sentence compelling brand story that explains the brand's purpose and value proposition",
+  "mission_statement": "Clear, inspiring mission statement that guides business decisions",
+  "vision_statement": "Future-oriented vision statement showing where the brand aims to be",
   "core_values": ["value1", "value2", "value3", "value4", "value5"],
+  
+  // ENHANCED: Generate specific, harmonious color schemes
   "color_palette": [
-    {"name": "Primary Brand", "hex": "#HEXCODE", "usage": "Main brand color for logos and primary elements"},
-    {"name": "Secondary", "hex": "#HEXCODE", "usage": "Supporting color for backgrounds and secondary elements"},
-    {"name": "Accent", "hex": "#HEXCODE", "usage": "Highlight color for CTAs and important elements"},
-    {"name": "Neutral Dark", "hex": "#HEXCODE", "usage": "Text and dark elements"},
-    {"name": "Neutral Light", "hex": "#HEXCODE", "usage": "Backgrounds and light elements"}
+    {
+      "name": "Primary Brand Color",
+      "hex": "#HEXCODE", 
+      "usage": "Main brand color for logos, primary buttons, and key brand elements",
+      "rgb": "r, g, b"
+    },
+    {
+      "name": "Secondary Color",
+      "hex": "#HEXCODE", 
+      "usage": "Supporting color for backgrounds, secondary elements, and accents",
+      "rgb": "r, g, b"
+    },
+    {
+      "name": "Accent Color",
+      "hex": "#HEXCODE", 
+      "usage": "Highlight color for CTAs, important elements, and interactive features",
+      "rgb": "r, g, b"
+    },
+    {
+      "name": "Neutral Dark",
+      "hex": "#HEXCODE", 
+      "usage": "Text color, headlines, and dark interface elements",
+      "rgb": "r, g, b"
+    },
+    {
+      "name": "Neutral Light",
+      "hex": "#HEXCODE", 
+      "usage": "Backgrounds, cards, and light interface elements",
+      "rgb": "r, g, b"
+    }
   ],
-  "design_style": "Detailed description of visual style matching the ${style} aesthetic",
+  
+  // ENHANCED: Generate practical design style with specific instructions
+  "design_style": "Detailed description of visual style matching ${style} aesthetic. Include specific characteristics like: minimalism level, use of negative space, icon style, layout preferences",
+  
+  // ENHANCED: Generate REAL, web-safe fonts with fallbacks
   "typography": {
-    "primary": "Primary font name - Usage: Headlines and prominent text",
-    "secondary": "Secondary font name - Usage: Body text and paragraphs", 
-    "accent": "Accent font name - Usage: Special elements and highlights"
+    "primary": {
+      "name": "Font Name (e.g., Inter, Poppins, Montserrat)",
+      "usage": "Headlines, prominent text, and brand name display",
+      "category": "Sans-serif or Serif",
+      "characteristics": "Describe the font personality (e.g., modern, friendly, professional)"
+    },
+    "secondary": {
+      "name": "Font Name (e.g., Open Sans, Roboto, Lato)",
+      "usage": "Body text, paragraphs, and general content",
+      "category": "Sans-serif or Serif", 
+      "characteristics": "Describe the font readability and feel"
+    },
+    "accent": {
+      "name": "Font Name (e.g., Playfair Display, Merriweather, Raleway)",
+      "usage": "Special elements, quotes, and decorative text",
+      "category": "Display or Special",
+      "characteristics": "Describe the decorative or special nature"
+    }
   },
+  
   "target_audience": {
-    "primary": "Detailed demographic and psychographic profile of main customers",
+    "primary": "Detailed demographic and psychographic profile of main customers (age, income, interests, values)",
     "secondary": "Additional relevant audience segments"
   },
+  
   "brand_personality": {
     "traits": ["adjective1", "adjective2", "adjective3", "adjective4", "adjective5"],
-    "tone_of_voice": "How the brand communicates with its audience"
+    "tone_of_voice": "How the brand communicates (e.g., professional yet friendly, authoritative but approachable)"
   },
+  
+  // ENHANCED: More specific logo direction for AI image generation
   "logo_direction": {
-    "concept": "Clear creative direction for logo design",
-    "symbolism": "Key symbolic elements and meanings to incorporate",
-    "style_notes": "Specific style requirements and visual guidelines"
+    "concept": "Clear creative direction for logo design. Be specific about symbols, shapes, and visual metaphors.",
+    "symbolism": "Key symbolic elements and their meanings (e.g., 'leaf for growth', 'arrow for progress').",
+    "style_notes": "Specific style requirements: use of lines (thick/thin), shape style (geometric/organic), complexity level, recommended iconography.",
+    "color_notes": "How to use the color palette in the logo (e.g., 'use primary color for main symbol, accent color for highlights').",
+    "typography_notes": "How typography should be integrated (e.g., 'clean sans-serif for wordmark, avoid script fonts').",
+
+    "ai_prompts": {
+      "primary": "Detailed prompt for AI image generation of primary logo (include specific symbols, colors, style)",
+      "icon": "Detailed prompt for icon version of logo",
+      "monochrome": "Detailed prompt for monochrome/black and white version",
+      "wordmark": "Detailed prompt for text-based logo if applicable"
+    }
   }
 }
 
-IMPORTANT: 
-- Return ONLY valid JSON, no additional text
-- Make hex codes realistic and harmonious
-- Ensure all values are practical for business use
-- Colors should work well together and match the ${style} style
-- Keep descriptions concise but impactful
+CRITICAL REQUIREMENTS:
+1. Colors MUST be harmonious and follow color theory for ${style} style
+2. Colors should include RGB values (calculated from hex)
+3. Fonts must be REAL, web-safe fonts available on Google Fonts
+4. Make all descriptions practical for immediate implementation
+5. Logo direction should be specific enough for AI image generation
+6. Return ONLY valid JSON, no additional text
+7. Hex codes must be valid 6-digit colors (like #3B82F6)
+
+Style-specific considerations:
+- For "minimal": Use monochromatic or analogous color schemes, clean fonts
+- For "tech": Use cool colors (blues, purples), geometric fonts
+- For "luxury": Use deep colors (burgundy, navy, gold), elegant serif fonts  
+- For "organic": Use earth tones, natural colors, rounded fonts
+- For "playful": Use bright, complementary colors, rounded fun fonts
+- For "vintage": Use muted colors, classic serif fonts
     `;
 
-    console.log('Generating comprehensive brand identity with Groq...');
+    console.log(
+      "Generating enhanced comprehensive brand identity with Groq..."
+    );
 
     try {
       const completion = await this.groq.chat.completions.create({
         messages: [
           {
             role: "system",
-            content: `You are a professional brand strategist and identity designer. 
-            Create comprehensive, practical brand identities that are ready for implementation. 
-            Always return valid JSON format. 
-            Make color palettes harmonious and professional.
-            Ensure brand values are meaningful and actionable.`
+            content: `You are an expert brand identity designer with deep knowledge of:
+          1. Color theory and harmonious palette creation
+          2. Typography and font pairing
+          3. Logo design principles for various industries
+          4. Modern design trends and styles
+          
+          Your brand identities must be:
+          - Practical and immediately usable
+          - Aesthetically cohesive and professional  
+          - Industry-appropriate
+          - Technically correct (valid hex codes, real font names)
+          - Specific enough for implementation by designers and developers`,
           },
           {
             role: "user",
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         model: "llama-3.3-70b-versatile",
         temperature: 0.7,
         max_tokens: 4000,
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
       });
 
       const response = completion.choices[0]?.message?.content;
-      
+
       if (!response) {
-        throw new Error('No response received from Groq');
+        throw new Error("No response received from Groq");
       }
 
-      console.log('Raw Groq response received, length:', response.length);
+      console.log("Enhanced brand identity response received");
 
       try {
         const parsedResponse = JSON.parse(response);
-        console.log('Successfully parsed brand identity');
-        
-        // Validate required fields
-        if (!parsedResponse.business_name || !parsedResponse.tagline || !parsedResponse.color_palette) {
-          console.warn('Missing required fields in response:', parsedResponse);
+        console.log("Successfully parsed enhanced brand identity");
+
+        // Add RGB values if missing
+        if (
+          parsedResponse.color_palette &&
+          Array.isArray(parsedResponse.color_palette)
+        ) {
+          parsedResponse.color_palette = parsedResponse.color_palette.map(
+            (color: any) => {
+              if (color.hex && !color.rgb) {
+                const rgb = this.hexToRgb(color.hex);
+                return {
+                  ...color,
+                  rgb: `${rgb[0]}, ${rgb[1]}, ${rgb[2]}`,
+                };
+              }
+              return color;
+            }
+          );
         }
-        
+
         return parsedResponse;
       } catch (parseError) {
-        console.error('Failed to parse Groq response as JSON. Raw response:', response.substring(0, 500));
-        
-        // Enhanced JSON extraction with multiple attempts
-        let extractedJson = null;
-        
-        // Attempt 1: Standard JSON extraction
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            extractedJson = JSON.parse(jsonMatch[0]);
-            console.log('Extracted JSON using standard method');
-          } catch (e) {
-            console.log('Standard extraction failed');
-          }
-        }
-        
-        // Attempt 2: Look for JSON after potential markers
-        if (!extractedJson) {
-          const jsonStart = response.indexOf('{');
-          const jsonEnd = response.lastIndexOf('}') + 1;
-          if (jsonStart !== -1 && jsonEnd > jsonStart) {
-            try {
-              extractedJson = JSON.parse(response.substring(jsonStart, jsonEnd));
-              console.log('Extracted JSON using position method');
-            } catch (e) {
-              console.log('Position extraction failed');
-            }
-          }
-        }
-        
-        if (extractedJson) {
-          return extractedJson;
-        }
-        
-        throw new Error('Invalid JSON response from AI service. Response: ' + response.substring(0, 200));
+        console.error("Failed to parse enhanced response as JSON:", parseError);
+        console.log("Raw response snippet:", response.substring(0, 500));
+        throw new Error("Invalid JSON response from AI service");
       }
-
     } catch (error) {
-      console.error('Groq API request failed:', error);
-      
-      // Provide more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes('model_decommissioned')) {
-          throw new Error('AI model unavailable. Please try again with a different model.');
-        } else if (error.message.includes('rate_limit')) {
-          throw new Error('AI service is busy. Please try again in a moment.');
-        } else if (error.message.includes('authentication')) {
-          throw new Error('AI service configuration error. Please contact support.');
-        }
-      }
-      
+      console.error("Enhanced Groq API request failed:", error);
       throw error;
     }
+  }
+
+  // Add this helper method to the GroqClient class
+  private hexToRgb(hex: string): [number, number, number] {
+    hex = hex.replace("#", "");
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return [r, g, b];
   }
 
   // Keep your existing generateText method
@@ -176,9 +236,9 @@ IMPORTANT:
         max_tokens: 500,
       });
 
-      return completion.choices[0]?.message?.content || '';
+      return completion.choices[0]?.message?.content || "";
     } catch (error) {
-      console.error('Groq text generation failed:', error);
+      console.error("Groq text generation failed:", error);
       throw error;
     }
   }
@@ -192,137 +252,214 @@ export class CloudflareAIClient {
   constructor() {
     this.accountId = process.env.CLOUDFLARE_ACCOUNT_ID!;
     this.apiToken = process.env.CLOUDFLARE_API_TOKEN!;
-    
+
     if (!this.accountId || !this.apiToken) {
-      console.error('Cloudflare credentials are missing');
-      throw new Error('Cloudflare AI not configured');
+      console.error("Cloudflare credentials are missing");
+      throw new Error("Cloudflare AI not configured");
     }
   }
 
-  async generateLogo(prompt: string, model: string = "@cf/black-forest-labs/flux-1-schnell") {
-    console.log('Calling Cloudflare AI with optimized settings...');
-    
+  async generateLogo(
+    prompt: string,
+    model: string = "@cf/black-forest-labs/flux-1-schnell"
+  ) {
+    console.log(`Calling Cloudflare AI model: ${model}...`);
+
     try {
       const response = await fetch(
         `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/${model}`,
         {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${this.apiToken}`,
+            Authorization: `Bearer ${this.apiToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            prompt: `${prompt}, simple vector logo, minimalist, clean, professional, white background, no complex details, flat design`,
-            num_steps: 2, // Reduced from 4 to 2 for much faster generation
-            guidance_scale: 3, // Lower guidance for faster generation
-            width: 256, // Smaller image size = faster
-            height: 256,
+            prompt: `${prompt}, minimalist vector logo, clean, professional, white background, flat design, simple`,
+            num_steps: 4,
+            guidance_scale: 7.5,
+            width: 512,
+            height: 512,
           }),
         }
       );
 
-      console.log('Cloudflare AI response status:', response.status);
+      console.log("Cloudflare AI response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Cloudflare AI error response:', errorText);
+        console.error("Cloudflare AI error response:", errorText);
         throw new Error(`Cloudflare AI error: ${response.status}`);
       }
 
-      const result = await response.json();
-      
-      let imageData = result.result;
-      
-      if (typeof imageData === 'object') {
-        if (imageData.image) {
-          imageData = imageData.image;
-        } else if (imageData.data) {
-          imageData = imageData.data;
-        } else {
-          const base64Value = Object.values(imageData).find(
-            (value: any) => typeof value === 'string' && value.length > 1000
-          );
-          if (base64Value) {
-            imageData = base64Value;
+      // Try multiple approaches to get the image
+      const contentType = response.headers.get("content-type");
+      console.log("Content-Type:", contentType);
+
+      // Approach 1: Try JSON parsing
+      if (contentType?.includes("application/json")) {
+        try {
+          const result = await response.json();
+          console.log("JSON response keys:", Object.keys(result));
+
+          // Common JSON response structures from Cloudflare AI
+          let imageData =
+            result.result || result.image || result.data || result.output;
+
+          if (typeof imageData === "object") {
+            // Handle nested structures
+            if (imageData.image) imageData = imageData.image;
+            else if (imageData.data) imageData = imageData.data;
+            else if (imageData.result) imageData = imageData.result;
+            else if (imageData.output) imageData = imageData.output;
+            else {
+              // Find any long string that might be base64
+              const base64Value = Object.values(imageData).find(
+                (value: any) => typeof value === "string" && value.length > 1000
+              );
+              if (base64Value) imageData = base64Value;
+            }
           }
+
+          if (typeof imageData === "string" && imageData.length > 100) {
+            // Clean up the string (remove data URL prefix if present)
+            const cleanImageData = imageData.replace(
+              /^data:image\/[^;]+;base64,/,
+              ""
+            );
+            console.log(
+              `✅ Extracted from JSON, length: ${cleanImageData.length}`
+            );
+            return cleanImageData;
+          }
+        } catch (jsonError) {
+          console.log("JSON parsing failed, trying other approaches...");
         }
       }
 
-      if (typeof imageData !== 'string') {
-        throw new Error('Invalid image data format received');
+      // Approach 2: Try binary/arrayBuffer
+      try {
+        const imageBuffer = await response.arrayBuffer();
+        if (imageBuffer.byteLength > 100) {
+          const base64Image = Buffer.from(imageBuffer).toString("base64");
+          console.log(`✅ Binary image, length: ${base64Image.length}`);
+          return base64Image;
+        }
+      } catch (binaryError) {
+        console.log("Binary approach failed...");
       }
 
-      console.log('Cloudflare AI success - logo generated in optimized mode');
-      return imageData;
+      // Approach 3: Try text and extract base64
+      const textData = await response.text();
+      console.log("Raw response length:", textData.length);
 
+      // Look for base64 pattern
+      const base64Regex =
+        /(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?/g;
+      const matches = textData.match(base64Regex);
+
+      if (matches) {
+        // Find the longest base64 string (likely the image)
+        const longestBase64 = matches.sort((a, b) => b.length - a.length)[0];
+        if (longestBase64 && longestBase64.length > 1000) {
+          console.log(
+            `✅ Found base64 in text, length: ${longestBase64.length}`
+          );
+          return longestBase64;
+        }
+      }
+
+      // Approach 4: Return raw text (might be base64 already)
+      console.log(`⚠️ Returning raw response, length: ${textData.length}`);
+      return textData;
     } catch (error) {
-      console.error('Cloudflare AI request failed:', error);
+      console.error(`Cloudflare AI request failed for model ${model}:`, error);
       throw error;
     }
   }
 
-  // Method to try faster models first
+  // Method to try reliable models
   async generateFastLogo(prompt: string) {
-    const fasterModels = [
-      "@cf/bytedance/stable-diffusion-xl-lightning", // Very fast model
-      "@cf/lykon/dreamshaper-8-lcm", // Fast with good quality  
-      "@cf/black-forest-labs/flux-1-schnell" // Your current (fallback)
+    // Updated order based on reliability for logos
+    const reliableModels = [
+      "@cf/black-forest-labs/flux-1-schnell", // Most reliable for logos
+      "@cf/lykon/dreamshaper-8-lcm", // Good fallback
+      "@cf/bytedance/stable-diffusion-xl-lightning", // Last resort
     ];
 
-    for (const model of fasterModels) {
+    for (const model of reliableModels) {
       try {
-        console.log(`Trying faster model: ${model}`);
+        console.log(`Trying model: ${model}`);
         const result = await this.generateLogo(prompt, model);
-        console.log(`✅ Success with fast model: ${model}`);
+        console.log(`✅ Success with model: ${model}`);
         return result;
       } catch (error) {
-        console.log(`❌ Fast model ${model} failed, trying next...`);
+        console.log(
+          `❌ Model ${model} failed:`,
+          error instanceof Error ? error.message : String(error)
+        );
         continue;
       }
     }
-    
-    throw new Error('All fast logo models failed');
+
+    throw new Error("All logo models failed");
   }
 
-  // Method for high quality (slower) generation when needed
+  // Method for high quality generation
   async generateHighQualityLogo(prompt: string) {
-    console.log('Generating high quality logo (slower)...');
-    
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/@cf/black-forest-labs/flux-1-schnell`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${this.apiToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: `${prompt}, professional logo, high quality, detailed, clean vector design, white background`,
-          num_steps: 6, // More steps for better quality
-          guidance_scale: 7.5,
-          width: 512,
-          height: 512,
-        }),
+    console.log("Generating high quality logo...");
+
+    try {
+      const response = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/@cf/black-forest-labs/flux-1-schnell`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.apiToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt: `${prompt}, professional vector logo, high quality, detailed, clean design, white background`,
+            num_steps: 6, // More steps for better quality
+            guidance_scale: 8.0,
+            width: 512,
+            height: 512,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`High quality generation failed: ${response.status}`);
       }
-    );
 
-    if (!response.ok) {
-      throw new Error(`High quality generation failed: ${response.status}`);
+      // Handle binary response
+      const imageBuffer = await response.arrayBuffer();
+      const base64Image = Buffer.from(imageBuffer).toString("base64");
+
+      console.log(`High quality logo generated: ${base64Image.length} bytes`);
+      return base64Image;
+    } catch (error) {
+      console.error("High quality generation failed:", error);
+      throw error;
     }
+  }
 
-    const result = await response.json();
-    let imageData = result.result;
-    
-    if (typeof imageData === 'object') {
-      if (imageData.image) imageData = imageData.image;
-      else if (imageData.data) imageData = imageData.data;
-    }
+  // Special method for logo-specific generation
+  async generateLogoWithStyle(prompt: string, style: string = "minimalist") {
+    const stylePrompts: Record<string, string> = {
+      minimalist: "minimalist, clean lines, simple geometric shapes",
+      tech: "geometric, futuristic, sharp edges, modern",
+      organic: "rounded shapes, natural, flowing lines, soft edges",
+      luxury: "elegant, sophisticated, refined, detailed",
+      playful: "fun, rounded, colorful, friendly",
+      vintage: "classic, retro, textured, traditional",
+    };
 
-    if (typeof imageData !== 'string') {
-      throw new Error('Invalid image data format received');
-    }
+    const stylePrompt = stylePrompts[style] || stylePrompts.minimalist;
 
-    return imageData;
+    const enhancedPrompt = `${prompt}, ${stylePrompt}, vector logo, white background, professional`;
+
+    return this.generateFastLogo(enhancedPrompt);
   }
 }
 

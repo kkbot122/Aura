@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PDFGenerator } from '@/lib/pdf-generator';
+import { PremiumPDFGenerator } from '@/lib/pdf-generator';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { brand, logoUrl, logoVariations } = body;
+    const { brand, logoUrl, logoVariations, mockups } = body;
 
     if (!brand || !logoUrl) {
       return NextResponse.json(
@@ -15,7 +15,21 @@ export async function POST(request: NextRequest) {
 
     console.log('Generating PDF brand book...');
 
-    const pdfDataUrl = await PDFGenerator.generateBrandBook(brand, logoUrl, logoVariations);
+    // FIXED: Pass as a single object matching PDFOptions interface
+    const pdfBlob = await PremiumPDFGenerator.generateBrandBook({
+      brand,
+      primaryLogo: logoUrl,  // Note: property name is 'primaryLogo', not 'logoUrl'
+      logoVariations: logoVariations || {},  // Ensure it's an object or empty object
+      mockups: mockups || []  // Add mockups if you have them
+    });
+
+    // Convert Blob to Data URL
+    const pdfDataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(pdfBlob);
+    });
 
     return NextResponse.json({
       success: true,
